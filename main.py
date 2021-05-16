@@ -15,14 +15,14 @@ class SnakePixel(object):
 
     def __init__(self, start, color=(255, 0, 0)):
         self.pos = start
-        self.dirnx = 1
-        self.dirny = 0
+        self.dirtx = 1
+        self.dirty = 0
         self.color = color
 
-    def move(self, dirnx, dirny):
-        self.dirnx = dirnx
-        self.dirny = dirny
-        self.pos = (self.pos[0] + self.dirnx, self.pos[1] + self.dirny)
+    def move(self, dirtx, dirty):
+        self.dirtx = dirtx
+        self.dirty = dirty
+        self.pos = (self.pos[0] + self.dirtx, self.pos[1] + self.dirty)
 
     def draw(self, surface, eyes=False):
         dis = width // rows
@@ -51,8 +51,8 @@ class Snake(object):
         self.color = color
         self.head = SnakePixel(pos)
         self.body.append(self.head)
-        self.dirnx = 0
-        self.dirny = 1
+        self.dirtx = 0
+        self.dirty = 1
 
     def move(self):
         global rows
@@ -64,24 +64,24 @@ class Snake(object):
             keys = pygame.key.get_pressed()
             # gameplay with arrows
             if keys[pygame.K_LEFT]:
-                self.dirnx = -1
-                self.dirny = 0
-                self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                self.dirtx = -1
+                self.dirty = 0
+                self.turns[self.head.pos[:]] = [self.dirtx, self.dirty]
 
             elif keys[pygame.K_RIGHT]:
-                self.dirnx = 1
-                self.dirny = 0
-                self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                self.dirtx = 1
+                self.dirty = 0
+                self.turns[self.head.pos[:]] = [self.dirtx, self.dirty]
 
             elif keys[pygame.K_UP]:
-                self.dirnx = 0
-                self.dirny = -1
-                self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                self.dirtx = 0
+                self.dirty = -1
+                self.turns[self.head.pos[:]] = [self.dirtx, self.dirty]
 
             elif keys[pygame.K_DOWN]:
-                self.dirnx = 0
-                self.dirny = 1
-                self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
+                self.dirtx = 0
+                self.dirty = 1
+                self.turns[self.head.pos[:]] = [self.dirtx, self.dirty]
 
         for i, c in enumerate(self.body):
             p = c.pos[:]
@@ -91,42 +91,43 @@ class Snake(object):
                 if i == len(self.body) - 1:
                     self.turns.pop(p)
             else:
-                if c.dirnx == -1 and c.pos[0] <= 0:
+                if c.dirtx == -1 and c.pos[0] <= 0:
                     c.pos = (rows - 1, c.pos[1])
-                elif c.dirnx == 1 and c.pos[0] >= rows - 1:
+                elif c.dirtx == 1 and c.pos[0] >= rows - 1:
                     c.pos = (0, c.pos[1])
-                elif c.dirny == 1 and c.pos[1] >= rows - 1:
+                elif c.dirty == 1 and c.pos[1] >= rows - 1:
                     c.pos = (c.pos[0], 0)
-                elif c.dirny == -1 and c.pos[1] <= 0:
+                elif c.dirty == -1 and c.pos[1] <= 0:
                     c.pos = (c.pos[0], rows - 1)
                 else:
-                    c.move(c.dirnx, c.dirny)
+                    c.move(c.dirtx, c.dirty)
 
-    def reset(self, pos):
+    def reset_game(self, pos):
         # restart if you lose
         self.head = SnakePixel(pos)
         self.body = []
         self.body.append(self.head)
         self.turns = {}
-        self.dirnx = 0
-        self.dirny = 1
+        self.dirtx = 0
+        self.dirty = 1
 
     def add_pixel(self):
         # grows up the snake
-        tail = self.body[-1]
-        dx, dy = tail.dirnx, tail.dirny
+        snake_tail = self.body[-1]
+        dx, dy = snake_tail.dirtx, snake_tail.dirty
 
+        # add a pixel tail to the snake, depend of the direction of the snake
         if dx == 1 and dy == 0:
-            self.body.append(SnakePixel((tail.pos[0] - 1, tail.pos[1])))
+            self.body.append(SnakePixel((snake_tail.pos[0] - 1, snake_tail.pos[1])))
         elif dx == -1 and dy == 0:
-            self.body.append(SnakePixel((tail.pos[0] + 1, tail.pos[1])))
+            self.body.append(SnakePixel((snake_tail.pos[0] + 1, snake_tail.pos[1])))
         elif dx == 0 and dy == 1:
-            self.body.append(SnakePixel((tail.pos[0], tail.pos[1] - 1)))
+            self.body.append(SnakePixel((snake_tail.pos[0], snake_tail.pos[1] - 1)))
         elif dx == 0 and dy == -1:
-            self.body.append(SnakePixel((tail.pos[0], tail.pos[1] + 1)))
+            self.body.append(SnakePixel((snake_tail.pos[0], snake_tail.pos[1] + 1)))
 
-        self.body[-1].dirnx = dx
-        self.body[-1].dirny = dy
+        self.body[-1].dirtx = dx
+        self.body[-1].dirty = dy
 
     def draw(self, surface):
         for i, c in enumerate(self.body):
@@ -292,7 +293,7 @@ def main():
                     msg = final()
                     if msg:
                         # restart game
-                        s.reset((start_pos, start_pos))
+                        s.reset_game((start_pos, start_pos))
                     else:
                         # quit game
                         pygame.quit()
@@ -304,7 +305,7 @@ def main():
                     msg = final()
                     if msg:
                         # restart game
-                        s.reset((start_pos, start_pos))
+                        s.reset_game((start_pos, start_pos))
                         break
                     else:
                         # quit game
